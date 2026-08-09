@@ -46,12 +46,10 @@ public class SentimentAnalytics {
     private static Map<String, Integer> getFrequency(Interaction interaction) {
         Map<String, Integer> frequency = new HashMap<>();
 
-        for(Segment segment: interaction.getSegments()){
-            for(String s : segment.getText()){
-                frequency.compute(s, (k, count) -> (count == null) ?  1 : (count + 1));
-            }
-        }
-
+        interaction.getSegments()
+                .stream()
+                .flatMap(s -> s.getText().stream())
+                .forEach(string -> frequency.compute(string, (k, count) -> (count == null) ?  1 : (count + 1)));
         return frequency;
     }
 
