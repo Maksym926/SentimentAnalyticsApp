@@ -32,8 +32,8 @@ public class SentimentAnalyticsTests {
     @Test
     public void resultOfInteractionWithoutSegmentTest(){
         Interaction interaction = new Interaction();
-
         String id = interactionGateway.create(interaction);
+
         AnalyticsResult res = sut.analyze(id).get();
 
         assertEquals(Optional.empty(), res.getSentiment());
@@ -42,15 +42,34 @@ public class SentimentAnalyticsTests {
     public void resultOfInteractionWithSingleSegmentTest(){
         Interaction interaction = new Interaction();
         Segment segment = segmentForSentiment(0.7, 0.2, 0.1);
-
         interaction.addSegment(segment);
         String id = interactionGateway.create(interaction);
+
         AnalyticsResult res = sut.analyze(id).get();
         Sentiment sentiment = res.getSentiment().get();
 
         assertEquals(0.7, sentiment.getPositive());
         assertEquals(0.2, sentiment.getNeutral());
         assertEquals(0.1, sentiment.getNegative());
+
+
+    }
+
+    @Test
+    public void resultOfInteractionWithMultipleSegmentsTest(){
+        Interaction interaction = new Interaction();
+        Segment segment1 = segmentForSentiment(0.5, 0.2, 0.3);
+        Segment segment2 =  segmentForSentiment(0.7, 0.1, 0.2);
+        interaction.addSegment(segment1);
+        interaction.addSegment(segment2);
+        String id = interactionGateway.create(interaction);
+
+        AnalyticsResult res = sut.analyze(id).get();
+        Sentiment sentiment = res.getSentiment().get();
+
+        assertEquals(0.6, sentiment.getPositive());
+        assertEquals(0.15, sentiment.getNeutral());
+        assertEquals(0.25, sentiment.getNegative());
 
 
     }

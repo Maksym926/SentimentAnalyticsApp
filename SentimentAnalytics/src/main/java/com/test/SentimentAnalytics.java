@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 public class SentimentAnalytics {
 
@@ -26,23 +28,30 @@ public class SentimentAnalytics {
         if(interaction.getSegments().isEmpty()){
             return AnalyticsResult.empty();
         }
-        Segment segment = interaction.getSegments().get(0);
-        long size = segment.getText().size();
+        long size = calculateSize(interaction);
 
 
-        Map<String, Integer> frequency = getFrequency(segment);
+
+        Map<String, Integer> frequency = getFrequency(interaction);
 
         return getAnalyticsResult(frequency, size);
 
     }
 
-    private static Map<String, Integer> getFrequency(Segment segment) {
+    private long calculateSize(Interaction interaction) {
+        return interaction.getSegments().stream()
+                .collect(Collectors.summarizingInt(s->s.getText().size())).getSum();
+    }
+
+    private static Map<String, Integer> getFrequency(Interaction interaction) {
         Map<String, Integer> frequency = new HashMap<>();
 
-
-        for(String s : segment.getText()){
-            frequency.compute(s, (k, count) -> (count == null) ?  1 : (count + 1));
+        for(Segment segment: interaction.getSegments()){
+            for(String s : segment.getText()){
+                frequency.compute(s, (k, count) -> (count == null) ?  1 : (count + 1));
+            }
         }
+
         return frequency;
     }
 
