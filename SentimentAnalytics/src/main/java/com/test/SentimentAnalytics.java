@@ -1,5 +1,8 @@
 package com.test;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public class SentimentAnalytics {
@@ -11,17 +14,32 @@ public class SentimentAnalytics {
     }
 
     public Optional<AnalyticsResult> analyze(String id) {
-        Optional<Interaction> interaction = interactionGateway.getById(id);
-        if(interaction.isPresent()){
+        return interactionGateway.getById(id)
+                .map(this::analyze);
 
-            return Optional.of(new AnalyticsResult());
+
+    }
+    private AnalyticsResult analyze(Interaction interaction){
+
+        if(interaction.getSegments().isEmpty()){
+            return new AnalyticsResult(null);
         }
-        return Optional.empty();
+        Segment segment = interaction.getSegments().get(0);
 
+        Map<String, Integer> frequency = new HashMap<>();
+
+        long size = segment.getText().size();
+        for(String s : segment.getText()){
+            frequency.compute(s, (k, count) -> (count == null) ?  1 : (count + 1));
+        }
+
+        double positive = ((double) frequency.get("Positive")) / size;
+        double neutral = ((double) frequency.get("Neutral")) / size;
+        double negative = ((double) frequency.get("Negative")) / size;
+
+        return new AnalyticsResult(new Sentiment(positive, neutral,negative));
 
     }
 
-    public String create(Interaction interaction) {
-        return interactionGateway.create(interaction);
-    }
+
 }
