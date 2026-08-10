@@ -25,59 +25,36 @@ public class SentimentAnalytics {
         if(interaction.getSegments().isEmpty()){
             return AnalyticsResult.empty();
         }
-        long size = calculateSize(interaction);
 
 
+        double positive = 0;
+        double neutral = 0;
+        double negative = 0;
 
-        Map<String, Integer> frequency = getFrequency(interaction);
 
-        return getAnalyticsResult(frequency, size);
+        List<Sentiment> sentiments = getSentiments(interaction);
 
+        for(Sentiment sentiment : sentiments){
+            positive+=sentiment.getPositive();
+            neutral+=sentiment.getNeutral();
+            negative+=sentiment.getNegative();
+        }
+        int size = sentiments.size();
+        return AnalyticsResult.of(positive / size, neutral / size, negative / size);
+
+    }
+
+    private static List<Sentiment> getSentiments(Interaction interaction) {
+        List<Sentiment> sentiments = interaction.getSegments()
+                .stream()
+                .map(Segment::calculateSentiment)
+                .toList();
+        return sentiments;
     }
 
     private long calculateSize(Interaction interaction) {
         return interaction.getSegments().stream()
                 .collect(Collectors.summarizingInt(Segment::getDataSize)).getSum();
     }
-
-    private Map<String, Integer> getFrequency(Interaction interaction) {
-        Map<String, Integer> frequency = new HashMap<>();
-
-        interaction.getSegments()
-                .stream()
-                .filter(s -> s instanceof TextSegment)
-                .map(s -> (TextSegment) s)
-                .flatMap(s -> s.getText().stream())
-                .forEach(string -> frequency.compute(string, (k, count) -> (count == null) ?  1 : (count + 1)));
-        interaction.getSegments()
-                .stream()
-                .filter(s -> s instanceof VoiceSegment)
-                .map(s -> (VoiceSegment) s)
-                .flatMap(s -> s.getPeaks().stream())
-                .map(this::toStringRepresentation)
-                .forEach(string -> frequency.compute(string, (k, count) -> (count == null) ?  1 : (count + 1)));
-        return frequency;
-    }
-
-    private String toStringRepresentation(Integer integer) {
-         if(integer >= 1 && integer<50){
-             return "Negative";
-         }
-         else if (integer >= 50 && integer<75 ){
-            return "Neutral";
-         }
-         else
-             return "Positive";
-    }
-
-    private static AnalyticsResult getAnalyticsResult(Map<String, Integer> frequency, long size) {
-        double positive = ((double) frequency.get("Positive")) / size;
-        double neutral = ((double) frequency.get("Neutral")) / size;
-        double negative = ((double) frequency.get("Negative")) / size;
-
-        return AnalyticsResult.of(positive, neutral, negative);
-    }
-
-
 
 }
