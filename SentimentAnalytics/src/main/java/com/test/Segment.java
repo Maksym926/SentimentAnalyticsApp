@@ -1,18 +1,7 @@
 package com.test;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Map;
 
-public class Segment {
-
-    List<String> segments = new ArrayList<>();
-
-
-    public Segment(List<String> segments) {
-        this.segments = segments;
-    }
-
-    public List<String> getText() {
-        return segments;
-    }
+public abstract class Segment {
+    public abstract int getDataSize();
 }
